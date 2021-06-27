@@ -1,0 +1,24 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "captain_quirk"
+author = "Max Fischer, Eileen Kuehn, Melvin Strobl, Christof Wendenius"
+author-email = "eileen.kuehn@kit.edu"
+home-page = "https://github.com/cirKITers/captain-quirk"
+classifiers = [ "License :: OSI Approved :: MIT License",]
+description-file = "README.md"
+requires = [
+    "qiskit ~= 0.25.0",
+    "typing_extensions",
+]
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest >=4.3.0",
+    "flake8",
+    "flake8-bugbear",
+    "black",
+]
+dev = ["pre-commit"]
