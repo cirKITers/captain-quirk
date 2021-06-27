@@ -32,6 +32,8 @@ def _parse_column(
 @singledispatch
 def unparse(circuit: QuantumCircuit) -> Union[str, List[str]]:
     """Takes a qiskit circuit and returns the appropriate quirk URL"""
+    if not isinstance(circuit, QuantumCircuit):
+        raise NotImplementedError(f"Unparsing of object {circuit} is not implemented")
     columns = AbstractSyntaxGrid()
     for gate, placement, _ in circuit.data:
         unparsed_gate = unparse(gate)
