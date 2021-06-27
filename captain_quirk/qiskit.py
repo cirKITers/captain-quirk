@@ -10,11 +10,15 @@ from qiskit.circuit.quantumregister import Qubit
 
 from ._utils import AbstractSyntaxGrid
 
+
 def parse(url: str):
     """Takes a quirk URL and creates an appropriate qiskit circuit"""
     ...
 
-def _parse_column(unparsed_gate: List[str], placement: List[Qubit]) -> List[Union[int, str]]:
+
+def _parse_column(
+    unparsed_gate: List[str], placement: List[Qubit]
+) -> List[Union[int, str]]:
     column = []
     for gate_index, current_placement in enumerate(placement):
         qubit_index = current_placement.index
@@ -22,6 +26,7 @@ def _parse_column(unparsed_gate: List[str], placement: List[Qubit]) -> List[Unio
             column.append(1)
         column[qubit_index] = unparsed_gate[gate_index]
     return column
+
 
 @singledispatch
 def unparse(circuit: QuantumCircuit) -> Union[str, List[str]]:
@@ -32,26 +37,35 @@ def unparse(circuit: QuantumCircuit) -> Union[str, List[str]]:
         print(f"{unparsed_gate} at {placement}")
         if isinstance(unparsed_gate, str):  # ensure equal treatment
             unparsed_gate = [unparsed_gate]
-            assert len(unparsed_gate) == len(placement), "length of gates and placement should be equal"
+            assert len(unparsed_gate) == len(
+                placement
+            ), "length of gates and placement should be equal"
         new_column = _parse_column(unparsed_gate, placement)
         columns.append(new_column)
-    return "https://algassert.com/quirk#circuit=" + json.dumps({"cols": columns.to_json()}, separators=(',', ':'))
+    return "https://algassert.com/quirk#circuit=" + json.dumps(
+        {"cols": columns.to_json()}, separators=(",", ":")
+    )
+
 
 @unparse.register
 def _(gate: HGate) -> str:
     return "H"
 
+
 @unparse.register
 def _(gate: XGate) -> str:
     return "X"
+
 
 @unparse.register
 def _(gate: CXGate) -> List[str]:
     return ["•", "X"]
 
+
 @unparse.register
 def _(gate: YGate) -> str:
     return "Y"
+
 
 @unparse.register
 def _(gate: ZGate) -> str:

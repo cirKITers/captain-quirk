@@ -16,7 +16,7 @@ class AbstractSyntaxGrid:
             self._merge(column)
         except IndexError:
             self._columns.append(column)
-    
+
     def _merge(self, column: List[Union[int, str]]):
         new_column = []
         for old, new in zip_longest(self._columns[-1], column, fillvalue=EMPTY):
