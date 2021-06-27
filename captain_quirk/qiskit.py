@@ -68,7 +68,7 @@ def _(gate: ControlledGate) -> List[AbstractGate]:
 @convert.register(RYGate)
 @convert.register(RZGate)
 def _(gate: Union[RXGate, RYGate, RZGate]) -> List[AbstractGate]:
-    return [AbstractGate(label=gate.name.capitalize()+"ft", param=gate.params[0])]
+    return [AbstractGate(label=gate.name.capitalize() + "ft", param=gate.params[0])]
 
 
 if __name__ == "__main__":
