@@ -2,8 +2,9 @@ import json
 from functools import singledispatch
 from typing import List, Union
 from qiskit import QuantumCircuit, QuantumRegister
+from qiskit.circuit.controlledgate import ControlledGate
 from qiskit.circuit.library.standard_gates import HGate
-from qiskit.circuit.library.standard_gates.x import CXGate, XGate
+from qiskit.circuit.library.standard_gates.x import XGate
 from qiskit.circuit.library.standard_gates.y import YGate
 from qiskit.circuit.library.standard_gates.z import ZGate
 from qiskit.circuit.quantumregister import Qubit
@@ -58,8 +59,11 @@ def _(gate: XGate) -> str:
 
 
 @unparse.register
-def _(gate: CXGate) -> List[str]:
-    return ["•", "X"]
+def _(gate: ControlledGate) -> List[str]:
+    result = []
+    result.extend(["•"] * gate.num_ctrl_qubits)
+    result.append(unparse(gate.base_gate))
+    return result
 
 
 @unparse.register
