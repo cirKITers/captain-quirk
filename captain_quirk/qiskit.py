@@ -4,12 +4,15 @@ from typing import List, Union
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.controlledgate import ControlledGate
 from qiskit.circuit.library.standard_gates import HGate
+from qiskit.circuit.library.standard_gates.rx import RXGate
+from qiskit.circuit.library.standard_gates.ry import RYGate
+from qiskit.circuit.library.standard_gates.rz import RZGate
 from qiskit.circuit.library.standard_gates.x import XGate
 from qiskit.circuit.library.standard_gates.y import YGate
 from qiskit.circuit.library.standard_gates.z import ZGate
 from qiskit.circuit.quantumregister import Qubit
 
-from ._utils import AbstractSyntaxGrid
+from ._utils import AbstractSyntaxGrid, AbstractGate
 
 
 def parse(url: str):
@@ -18,8 +21,8 @@ def parse(url: str):
 
 
 def _parse_column(
-    unparsed_gate: List[str], placement: List[Qubit]
-) -> List[Union[int, str]]:
+    unparsed_gate: List[AbstractGate], placement: List[Qubit]
+) -> List[Union[int, AbstractGate]]:
     column = []
     for gate_index, current_placement in enumerate(placement):
         qubit_index = current_placement.index
@@ -30,19 +33,16 @@ def _parse_column(
 
 
 @singledispatch
-def unparse(circuit: QuantumCircuit) -> Union[str, List[str]]:
+def unparse(circuit: QuantumCircuit) -> str:
     """Takes a qiskit circuit and returns the appropriate quirk URL"""
     if not isinstance(circuit, QuantumCircuit):
         raise NotImplementedError(f"Unparsing of object {circuit} is not implemented")
     columns = AbstractSyntaxGrid()
     for gate, placement, _ in circuit.data:
-        unparsed_gate = unparse(gate)
-        print(f"{unparsed_gate} at {placement}")
-        if isinstance(unparsed_gate, str):  # ensure equal treatment
-            unparsed_gate = [unparsed_gate]
-            assert len(unparsed_gate) == len(
-                placement
-            ), "length of gates and placement should be equal"
+        unparsed_gate = convert(gate)
+        assert len(unparsed_gate) == len(
+            placement
+        ), "length of gates and placement should be equal"
         new_column = _parse_column(unparsed_gate, placement)
         columns.append(new_column)
     return "https://algassert.com/quirk#circuit=" + json.dumps(
@@ -50,38 +50,31 @@ def unparse(circuit: QuantumCircuit) -> Union[str, List[str]]:
     )
 
 
-@unparse.register
-def _(gate: HGate) -> str:
-    return "H"
+@singledispatch
+def convert(gate: Union[HGate, XGate, YGate, ZGate]) -> List[AbstractGate]:
+    return [AbstractGate(label=gate.name.upper())]
 
 
-@unparse.register
-def _(gate: XGate) -> str:
-    return "X"
-
-
-@unparse.register
-def _(gate: ControlledGate) -> List[str]:
+@convert.register
+def _(gate: ControlledGate) -> List[AbstractGate]:
     result = []
-    result.extend(["•"] * gate.num_ctrl_qubits)
-    result.append(unparse(gate.base_gate))
+    for _ in range(gate.num_ctrl_qubits):
+        result.append(AbstractGate(label="•"))
+    result.extend(convert(gate.base_gate))
     return result
 
 
-@unparse.register
-def _(gate: YGate) -> str:
-    return "Y"
-
-
-@unparse.register
-def _(gate: ZGate) -> str:
-    return "Z"
+@convert.register(RXGate)
+@convert.register(RYGate)
+@convert.register(RZGate)
+def _(gate: Union[RXGate, RYGate, RZGate]) -> List[AbstractGate]:
+    return [AbstractGate(label=gate.name.capitalize()+"ft", param=gate.params[0])]
 
 
 if __name__ == "__main__":
     register = QuantumRegister(2)
     circuit = QuantumCircuit(register)
-    circuit.h(register)
+    circuit.crz(0.5, register[0], register[1])
     circuit.cx(register[1], register[0])
     print(circuit)
     print(unparse(circuit))
